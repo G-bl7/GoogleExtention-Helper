@@ -19,9 +19,10 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 function saveSelectedText(selectedText) {
   let note = prompt("Add a note to the selected text:");
   if (selectedText && note !== null) {
+    const timestamp = new Date().toLocaleString();
     chrome.storage.local.get({ vunData: [] }, (result) => {
       let vunData = result.vunData;
-      vunData.push({ text: selectedText, note: note });
+      vunData.push({ text: selectedText, note: note, timestamp: timestamp });
       chrome.storage.local.set({ vunData: vunData }, () => {
         console.log('Data saved:', vunData);
       });

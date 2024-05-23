@@ -20,10 +20,13 @@ function loadVunData() {
       noteCell.contentEditable = 'true';
       noteCell.textContent = item.note;
 
+      const timestampCell = document.createElement('td');
+      timestampCell.textContent = item.timestamp;
+
       const actionsCell = document.createElement('td');
       const saveButton = document.createElement('button');
       saveButton.textContent = 'Save';
-      saveButton.addEventListener('click', () => saveVunData(index, textCell.textContent, noteCell.textContent));
+      saveButton.addEventListener('click', () => saveVunData(index, textCell.textContent, noteCell.textContent, item.timestamp));
 
       const deleteButton = document.createElement('button');
       deleteButton.textContent = 'Delete';
@@ -34,6 +37,7 @@ function loadVunData() {
 
       row.appendChild(textCell);
       row.appendChild(noteCell);
+      row.appendChild(timestampCell);
       row.appendChild(actionsCell);
 
       tableBody.appendChild(row);
@@ -41,10 +45,10 @@ function loadVunData() {
   });
 }
 
-function saveVunData(index, newText, newNote) {
+function saveVunData(index, newText, newNote, timestamp) {
   chrome.storage.local.get({ vunData: [] }, (result) => {
     const vunData = result.vunData;
-    vunData[index] = { text: newText, note: newNote };
+    vunData[index] = { text: newText, note: newNote, timestamp: timestamp };
     chrome.storage.local.set({ vunData: vunData }, loadVunData);
   });
 }
