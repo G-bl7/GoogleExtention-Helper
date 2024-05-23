@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Vun Data</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid black;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    button {
+      padding: 5px 10px;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h3>Edit Vun Data</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Text</th>
+        <th>Note</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="vunTableBody">
+      <!-- Data rows will be inserted here -->
+    </tbody>
+  </table>
+  <button id="exportButton">Export</button>
+  <button id="importButton">Import</button>
+  <input type="file" id="importFile" style="display: none;">
+  <script src="edit.js"></script>
+</body>
+</html>
