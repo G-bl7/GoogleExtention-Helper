@@ -22,12 +22,26 @@
 </head>
 <body>
   <h3>Edit Vun Data</h3>
+  <div>
+    <input type="text" id="searchText" placeholder="Search text, note, or date">
+    <button id="searchButton">Search</button>
+    <select id="filterTag">
+      <option value="">All Tags</option>
+      <option value="Urgent">Urgent</option>
+      <option value="Important">Important</option>
+      <option value="High Priority">High Priority</option>
+      <option value="Deadline">Deadline</option>
+      <option value="Follow-up">Follow-up</option>
+    </select>
+    <button id="filterButton">Filter</button>
+  </div>
   <table>
     <thead>
       <tr>
         <th>Text</th>
         <th>Note</th>
         <th>Timestamp</th>
+        <th>Tag</th>
         <th>Actions</th>
       </tr>
     </thead>

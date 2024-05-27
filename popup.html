@@ -1,20 +1,42 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <title>Vun Text Saver</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       width: 300px;
     }
+
     button {
-      padding: 10px;
-      font-size: 16px;
+      display: block;
+      width: 100%;
+      padding: 0;
+      font-size: inherit;
+      background: none;
+      border: none;
+      color: rgb(15, 15, 17);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    button:not(:last-child) {
+      margin-bottom: 10px;
     }
   </style>
 </head>
+
 <body>
-  <button id="editButton">Edit</button>
+  <button id="editButton"><i class="fas fa-pencil-alt"></i> Text Saved</button>
+  <button id="addExclude"><i class="fas fa-plus-circle"></i> Add Excluded Website</button>
+  <button id="manageExclude"><i class="fas fa-cog"></i> Manage Excluded Websites</button>
+  <button id="exportButton"><i class="fas fa-download"></i> Export All</button>
+  <input type="file" id="importFile" style="display: none;">
+  <button id="importButton"><i class="fas fa-upload"></i> Import All</button>
+
   <script src="popup.js"></script>
 </body>
+
 </html>

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Vun Text Saver",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Save selected text with notes and underline saved text on any webpage.",
   "permissions": [
     "storage",
