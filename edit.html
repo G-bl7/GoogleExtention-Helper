@@ -23,6 +23,14 @@
       padding: 5px 10px;
       margin: 5px;
     }
+
+    table td:first-child {
+      max-width: 10px;
+      /* Set your desired max width */
+
+      width: 00px;
+      /* Optionally, set a fixed width */
+    }
   </style>
 </head>
 
@@ -31,6 +39,10 @@
   <div>
     <input type="text" id="searchText" placeholder="Search text, note, or date">
     <button id="searchButton">Search</button>
+    <button id="exportButton">Export</button>
+    <button id="importButton">Import</button>
+    <button id="deleteSelectedButton">Delete Selected</button>
+    <input type="file" id="importFile" style="display: none;">
     <select id="filterTag">
       <option value="">All Tags</option>
       <option value="Urgent">Urgent</option>
@@ -41,9 +53,12 @@
     </select>
     <button id="filterButton">Filter</button>
   </div>
+  <p>Total Rows: <span id="totalRows">0</span></p>
+  <p>Filtered Results: <span id="filteredResults">0</span></p>
   <table>
     <thead>
       <tr>
+        <th><input type="checkbox" id="selectAll"></th>
         <th>Text</th>
         <th>Note</th>
         <th>Timestamp</th>
@@ -55,9 +70,6 @@
       <!-- Data rows will be inserted here -->
     </tbody>
   </table>
-  <button id="exportButton">Export</button>
-  <button id="importButton">Import</button>
-  <input type="file" id="importFile" style="display: none;">
   <script src="edit.js"></script>
 </body>
 

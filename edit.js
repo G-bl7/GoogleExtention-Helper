@@ -1,15 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
   loadVunData();
-  document.getElementById('exportButton').addEventListener('click', exportVunData);
+  document.getElementById('exportButton').addEventListener('click', () => exportVunData(filteredData));
   document.getElementById('importButton').addEventListener('click', () => document.getElementById('importFile').click());
   document.getElementById('importFile').addEventListener('change', importVunData);
   document.getElementById('searchButton').addEventListener('click', searchVunData);
   document.getElementById('filterButton').addEventListener('click', filterVunData);
+  document.getElementById('deleteSelectedButton').addEventListener('click', deleteSelectedVunData);
+  document.getElementById('selectAll').addEventListener('change', toggleSelectAll);
 });
+
+let filteredData = [];
 
 function loadVunData() {
   chrome.storage.local.get({ vunData: [] }, (result) => {
     displayVunData(result.vunData);
+    updateTotalRowsCount(result.vunData.length);
+    updateFilteredResultsCount(result.vunData.length); // Initial load, filtered results same as total rows
+    filteredData = result.vunData; // Initialize filteredData
   });
 }
 
@@ -19,6 +26,13 @@ function displayVunData(vunData) {
 
   vunData.forEach((item, index) => {
     const row = document.createElement('tr');
+
+    const selectCell = document.createElement('td');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.classList.add('select-row');
+    checkbox.dataset.index = index;
+    selectCell.appendChild(checkbox);
 
     const textCell = document.createElement('td');
     textCell.contentEditable = 'true';
@@ -55,6 +69,7 @@ function displayVunData(vunData) {
     actionsCell.appendChild(saveButton);
     actionsCell.appendChild(deleteButton);
 
+    row.appendChild(selectCell);
     row.appendChild(textCell);
     row.appendChild(noteCell);
     row.appendChild(timestampCell);
@@ -69,7 +84,11 @@ function saveVunData(index, newText, newNote, timestamp, newTag) {
   chrome.storage.local.get({ vunData: [] }, (result) => {
     const vunData = result.vunData;
     vunData[index] = { text: newText, note: newNote, timestamp: timestamp, tag: newTag };
-    chrome.storage.local.set({ vunData: vunData }, loadVunData);
+    chrome.storage.local.set({ vunData: vunData }, () => {
+      loadVunData();
+      updateTotalRowsCount(vunData.length); // Update count after save
+      updateFilteredResultsCount(vunData.length); // Reset filtered count
+    });
   });
 }
 
@@ -77,23 +96,40 @@ function deleteVunData(index) {
   chrome.storage.local.get({ vunData: [] }, (result) => {
     let vunData = result.vunData;
     vunData.splice(index, 1);
-    chrome.storage.local.set({ vunData: vunData }, loadVunData);
+    chrome.storage.local.set({ vunData: vunData }, () => {
+      loadVunData();
+      updateTotalRowsCount(vunData.length); // Update count after deletion
+      updateFilteredResultsCount(vunData.length); // Reset filtered count
+    });
   });
 }
 
-function exportVunData() {
+function deleteSelectedVunData() {
+  const checkboxes = document.querySelectorAll('.select-row:checked');
+  if (checkboxes.length === 0) return;
+  
+  const indicesToDelete = Array.from(checkboxes).map(checkbox => parseInt(checkbox.dataset.index));
+  
   chrome.storage.local.get({ vunData: [] }, (result) => {
-    const vunData = result.vunData;
-    const blob = new Blob([JSON.stringify(vunData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'vunData.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    let vunData = result.vunData.filter((item, index) => !indicesToDelete.includes(index));
+    chrome.storage.local.set({ vunData: vunData }, () => {
+      loadVunData();
+      updateTotalRowsCount(vunData.length); // Update count after deletion
+      updateFilteredResultsCount(vunData.length); // Reset filtered count
+    });
   });
+}
+
+function exportVunData(dataToExport) {
+  const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'vunData.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function importVunData(event) {
@@ -119,6 +155,8 @@ function importVunData(event) {
                 } else {
                   console.log('vunData imported and appended:', newVunData);
                   loadVunData(); // Reload the data
+                  updateTotalRowsCount(newVunData.length); // Update count after import
+                  updateFilteredResultsCount(newVunData.length); // Reset filtered count
                 }
               });
             } else {
@@ -137,18 +175,18 @@ function importVunData(event) {
   }
 }
 
-
 function searchVunData() {
   const searchText = document.getElementById('searchText').value.toLowerCase();
   console.log('Searching for:', searchText);
   chrome.storage.local.get({ vunData: [] }, (result) => {
-    const filteredData = result.vunData.filter(item =>
+    filteredData = result.vunData.filter(item =>
       (item.text && item.text.toLowerCase().includes(searchText)) ||
       (item.note && item.note.toLowerCase().includes(searchText)) ||
       (item.timestamp && item.timestamp.toLowerCase().includes(searchText))
     );
     console.log('Filtered Data:', filteredData);
     displayVunData(filteredData);
+    updateFilteredResultsCount(filteredData.length); // Update count after search
   });
 }
 
@@ -156,10 +194,25 @@ function filterVunData() {
   const selectedTag = document.getElementById('filterTag').value;
   console.log('Filtering by tag:', selectedTag);
   chrome.storage.local.get({ vunData: [] }, (result) => {
-    const filteredData = selectedTag
+    filteredData = selectedTag
       ? result.vunData.filter(item => item.tag === selectedTag)
       : result.vunData;
     console.log('Filtered Data:', filteredData);
     displayVunData(filteredData);
+    updateFilteredResultsCount(filteredData.length); // Update count after filter
   });
+}
+
+function updateTotalRowsCount(count) {
+  document.getElementById('totalRows').textContent = count;
+}
+
+function updateFilteredResultsCount(count) {
+  document.getElementById('filteredResults').textContent = count;
+}
+
+function toggleSelectAll() {
+  const selectAllCheckbox = document.getElementById('selectAll');
+  const checkboxes = document.querySelectorAll('.select-row');
+  checkboxes.forEach(checkbox => checkbox.checked = selectAllCheckbox.checked);
 }
