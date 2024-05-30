@@ -1,6 +1,9 @@
 # Vun Text Saver Chrome Extension
 
-Vun Text Saver is a Chrome extension that allows you to save selected text from any webpage along with an optional note and tag. The saved text will be underlined on the webpage where it was saved. You can also edit, delete, export, and import your saved data, and manage excluded websites.
+Vun Text Saver is a powerful Chrome extension designed to enhance your browsing experience by allowing you to save selected text from any webpage, 
+complete with optional notes and tags. The saved text is underlined on the webpage for easy identification. Additionally,
+ you can edit, delete, export, and import your saved data, and manage excluded websites to customize your experience.
+  The extension also features a Regex filtering capability, including a default IP filter, which is automatically applied to webpages you visit. Filtered results are temporarily stored in a data structure that can be exported when needed.
 
 ## Features
 
@@ -11,7 +14,10 @@ Vun Text Saver is a Chrome extension that allows you to save selected text from 
 - Export saved data to a JSON file.
 - Import data from a JSON file.
 - Exclude specific websites from the extension's functionality.
-- Manage excluded websites through a dedicated interface.
+- Apply Regex Filter: Vun Text Saver facilitates the application of Regex filters, enabling users to refine their browsing experience based on specific criteria.
+- Add/Delete Filters (Regex): Users have the flexibility to easily add or remove Regex filters according to their preferences, allowing for a personalized browsing environment.
+- Export Found Text: The extension offers the functionality to export text that has been identified, providing users with a convenient way to manage and utilize their collected information.
+
 
 ## Installation
 
@@ -27,19 +33,12 @@ Vun Text Saver is a Chrome extension that allows you to save selected text from 
 3. **Export Data**: Click the "Export" button to download your saved data as a JSON file.
 4. **Import Data**: Click the "Import" button and select a JSON file to upload and replace the current data.
 5. **Manage Excluded Websites**: Right-click on any webpage and select "Manage Excluded Websites" to open a new tab where you can search, update, and delete excluded websites. Use "Add Excluded Website" to add the current domain to the excluded list.
+6. **Apply Filter**: Click on the "Apply Filter" button to filter text with the default Regex on the webpage source.
+7. **Manage Found Text**: Click on the "Manage Tmp" button to see found text on a new HTML page.
+8. **Manage Filters**: You can manage filters by adding, deleting, and setting defaults by clicking on "Manage Filter".
+9. **Export Found Text**: With "Export Tmp", you can export found text to a specific file.
+10. **Clear the Buffer**: "Clean Tmp" gives you the possibility to clean found text that is saved in the temporary buffer.
 
-## Files
-
-- `manifest.json`: Extension manifest file that defines the extension's properties and permissions.
-- `background.js`: Background script to handle saving selected text with notes and tags, and manage excluded websites.
-- `content.js`: Content script to underline saved text on the webpage and prompt for notes and tags.
-- `styles.css`: Stylesheet for custom underlined text.
-- `popup.html`: HTML file for the extension's popup interface.
-- `popup.js`: JavaScript file for handling the popup interface actions.
-- `edit.html`: HTML file for the edit data interface.
-- `edit.js`: JavaScript file for handling the edit data interface actions.
-- `manage_excluded.html`: HTML file for managing excluded websites.
-- `manage_excluded.js`: JavaScript file for handling the manage excluded websites interface actions.
 
 ## Development
 

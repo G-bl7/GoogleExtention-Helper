@@ -98,31 +98,53 @@ function exportVunData() {
 
 function importVunData(event) {
   const file = event.target.files[0];
+  
   if (file) {
     const reader = new FileReader();
+    
     reader.onload = (e) => {
       try {
         const jsonData = JSON.parse(e.target.result);
+        
         if (Array.isArray(jsonData)) {
-          chrome.storage.local.set({ vunData: jsonData }, loadVunData);
+          chrome.storage.local.get({ vunData: [] }, function(result) {
+            const currentVunData = result.vunData;
+
+            if (Array.isArray(currentVunData)) {
+              const newVunData = [...new Set([...currentVunData, ...jsonData])]; // Merge and remove duplicates
+
+              chrome.storage.local.set({ vunData: newVunData }, function() {
+                if (chrome.runtime.lastError) {
+                  console.error('Error setting vunData in storage:', chrome.runtime.lastError);
+                } else {
+                  console.log('vunData imported and appended:', newVunData);
+                  loadVunData(); // Reload the data
+                }
+              });
+            } else {
+              console.error('Existing vunData is not in the correct format.');
+            }
+          });
         } else {
-          alert('Invalid JSON format. Please upload a valid JSON file.');
+          console.error('Invalid JSON format. Please upload a valid JSON file.');
         }
       } catch (error) {
-        alert('Error reading JSON file. Please upload a valid JSON file.');
+        console.error('Error reading JSON file. Please upload a valid JSON file.');
       }
     };
+    
     reader.readAsText(file);
   }
 }
+
 
 function searchVunData() {
   const searchText = document.getElementById('searchText').value.toLowerCase();
   console.log('Searching for:', searchText);
   chrome.storage.local.get({ vunData: [] }, (result) => {
-    const filteredData = result.vunData.filter(item => 
-      (item.text && item.text.toLowerCase().includes(searchText)) || 
-      (item.note && item.note.toLowerCase().includes(searchText)) || 
+    const filteredData = result.vunData.filter(item =>
+      (item.text && item.text.toLowerCase().includes(searchText)) ||
+      (item.note && item.note.toLowerCase().includes(searchText)) ||
       (item.timestamp && item.timestamp.toLowerCase().includes(searchText))
     );
     console.log('Filtered Data:', filteredData);
@@ -134,8 +156,8 @@ function filterVunData() {
   const selectedTag = document.getElementById('filterTag').value;
   console.log('Filtering by tag:', selectedTag);
   chrome.storage.local.get({ vunData: [] }, (result) => {
-    const filteredData = selectedTag 
-      ? result.vunData.filter(item => item.tag === selectedTag) 
+    const filteredData = selectedTag
+      ? result.vunData.filter(item => item.tag === selectedTag)
       : result.vunData;
     console.log('Filtered Data:', filteredData);
     displayVunData(filteredData);
