@@ -1,0 +1,21 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+#filterList {
+  margin-top: 20px;
+}
+
+.filterItem {
+  margin-bottom: 10px;
+}
+
+.editButton,
+.deleteButton {
+  margin-left: 10px;
+}

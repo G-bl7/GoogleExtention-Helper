@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" href="text-not-manager.css" >
+  <title>Edit Vun Data</title>
+  
+</head>
+
+<body>
+  <h3>Edit Vun Data</h3>
+  <div>
+    <input type="text" id="searchText" placeholder="Search text, note, or date">
+    <button id="searchButton">Search</button>
+    <button id="exportButton">Export</button>
+    <button id="importButton">Import</button>
+    <button id="deleteSelectedButton">Delete Selected</button>
+    <input type="file" id="importFile" style="display: none;">
+    <select id="filterTag">
+      <option value="">All Tags</option>
+      <option value="Urgent">Urgent</option>
+      <option value="Important">Important</option>
+      <option value="High Priority">High Priority</option>
+      <option value="Deadline">Deadline</option>
+      <option value="Follow-up">Follow-up</option>
+    </select>
+    <button id="filterButton">Filter</button>
+    
+    <!-- More Options Button -->
+    <div class="dropdown">
+      <button id="moreOptionsButton">More Opt</button>
+      <div class="dropdown-content">
+        <a href="#" id="importTextData">Import Text Data</a>
+        <input type="file" id="importFileText" style="display: none;">
+      </div>
+    </div>
+  </div>
+  <p>Total Rows: <span id="totalRows">0</span></p>
+  <p>Filtered Results: <span id="filteredResults">0</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="selectAll"></th>
+        <th>Text</th>
+        <th>Note</th>
+        <th>Timestamp</th>
+        <th>Tag</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="vunTableBody">
+      <!-- Data rows will be inserted here -->
+    </tbody>
+  </table>
+  <script src="text-not-manager.js"></script>
+</body>
+
+</html>
