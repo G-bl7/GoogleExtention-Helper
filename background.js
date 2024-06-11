@@ -1,31 +1,22 @@
 //***********-DATABASE Management-*************/
 let db;
-let available = false;
+let defaultProfile = null
 
-console.log("Background start On run");
+console.log("Background start on run");
 
+// Open the IndexedDB
 const request = indexedDB.open('Suise_knife_GE', 1);
 
-request.onerror = function (event) {
+request.onerror = (event) => {
   console.error('IndexedDB error:', event.target.errorCode);
 };
 
-request.onsuccess = function (event) {
+request.onsuccess = (event) => {
   console.log('IndexedDB on success.');
   db = event.target.result;
-  available = true;
-  create_context_menu();  // Moved here to ensure DB is ready
 };
 
-// Handle extension installation
-chrome.runtime.onInstalled.addListener(function (details) {
-  if (details.reason === 'install') {
-    console.log('Welcome to G-bl7 Assistant 1.1');
-  }
-});
-
-// On upgrade && installation 
-request.onupgradeneeded = function (event) {
+request.onupgradeneeded = (event) => {
   console.log('IndexedDB on upgrade needed.');
   db = event.target.result;
 
@@ -33,140 +24,178 @@ request.onupgradeneeded = function (event) {
     const profileStore = db.createObjectStore('profiles', { keyPath: 'id', autoIncrement: true });
     profileStore.createIndex('profile_name', 'profile_name', { unique: true });
     profileStore.createIndex('default', 'default', { unique: false });
-    console.log('profiles schema INIT.');
-    
-    // Add the new profile after the object store and indexes are created
-    profileStore.transaction.oncomplete = function (event) {
-      const new_profile = {
-        profile_name: 'Default',
-        default: true
-      };
-      addNewProfile(new_profile);
-      const new_profile2 = {
-        profile_name: 'Vuln',
-        default: false
-      };
-      addNewProfile(new_profile2);
+    console.log('Profiles schema initialized.');
+
+    profileStore.transaction.oncomplete = () => {
+      addNewProfile({ profile_name: 'Default', default: true });
+      addNewProfile({ profile_name: 'Vuln', default: false });
     };
   }
 };
+
+// Handle extension installation
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') {
+    console.log('Welcome to G-bl7 Assistant 1.1');
+  }
+});
 
 //***********-PROFILE MANAGEMENT-*************/
 
 // Add new profile
 function addNewProfile(profileData) {
-  if (!available) return; // Check if DB is available
+  if (!db) {
+    console.log('DB not available');
+    return;
+  }
 
-  const transaction = db.transaction(['profiles'], 'readwrite');
-  const profileStore = transaction.objectStore('profiles');
-
-  const addRequest = profileStore.add(profileData);
-
-  addRequest.onsuccess = function (event) {
-    console.log('New profile added successfully');
-  };
-
-  addRequest.onerror = function (event) {
-    console.error('Error adding new profile:', event.target.error);
-  };
-}
-
-// Get Default profile
-function selectDefaultProfile() {
-
-  return new Promise((resolve, reject) => {
-
-    if (!available) {
-      reject('DB is not available');
-      return;
-    }
-
-    const transaction = db.transaction(['profiles'], 'readonly');
+  try {
+    const transaction = db.transaction(['profiles'], 'readwrite');
     const profileStore = transaction.objectStore('profiles');
-    const index = profileStore.index('default');
+    const addRequest = profileStore.add(profileData);
 
-    console.log('Opening cursor to select default profile...');
-    const request = index.openCursor(IDBKeyRange.only(true));
-
-    request.onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (cursor) {
-        const defaultProfile = cursor.value;
-        console.log('Default profile found:', defaultProfile);
-        resolve(defaultProfile);
-      } else {
-        console.log('No default profile found.');
-        resolve(null);
-      }
+    addRequest.onsuccess = () => {
+      console.log('New profile added successfully');
     };
 
-    request.onerror = function (event) {
-      console.error('Error selecting default profile:', event.target.error);
-      reject(event.target.error);
+    addRequest.onerror = (event) => {
+      console.error('Error adding new profile:', event.target.error);
     };
-  });
+  } catch (error) {
+    console.error('Transaction error:', error);
+  }
 }
 
 // Get all profiles
 function getAllProfiles(callback) {
-  if (!available) {
-    callback([]);
+  if (!db) {
+    console.log('DB not available');
     return;
   }
 
-  console.log('Getting All Profiles');
-  const transaction = db.transaction(['profiles'], 'readonly');
-  const profileStore = transaction.objectStore('profiles');
+  try {
+    console.log('Getting all profiles');
+    const transaction = db.transaction(['profiles'], 'readonly');
+    const profileStore = transaction.objectStore('profiles');
+    const getAllRequest = profileStore.getAll();
 
-  const request = profileStore.getAll();
+    getAllRequest.onsuccess = (event) => {
+      const profiles = event.target.result;
+      callback(profiles);
+    };
 
-  request.onsuccess = function (event) {
-    const profiles = event.target.result;
-    callback(profiles);
-  };
-
-  request.onerror = function (event) {
-    console.error('Error getting all profiles:', event.target.error);
+    getAllRequest.onerror = (event) => {
+      console.log('Error getting all profiles:', event.target.error);
+      callback([]); // Return an empty array in case of error
+    };
+  } catch (error) {
+    console.error('Transaction error:', error);
     callback([]); // Return an empty array in case of error
-  };
+  }
 }
 
-// Set the Default Profile
+// Set the default profile by name
 function setDefaultProfileByName(profileName, callback) {
-  if (!available) {
+  if (!db) {
     callback(null);
     return;
   }
 
-  const transaction = db.transaction(['profiles'], 'readwrite');
-  const profileStore = transaction.objectStore('profiles');
-  const index = profileStore.index('profile_name');
+  try {
+    const transaction = db.transaction(['profiles'], 'readwrite');
+    const profileStore = transaction.objectStore('profiles');
+    const index = profileStore.index('profile_name');
+    const getRequest = index.get(profileName);
 
-  const request = index.get(profileName);
+    getRequest.onsuccess = (event) => {
+      const profile = event.target.result;
+      if (profile) {
+        profile.default = true; // Update the 'default' property to true
+        const updateRequest = profileStore.put(profile);
 
-  request.onsuccess = function (event) {
-    const profile = event.target.result;
-    if (profile) {
-      profile.default = true; // Update the 'default' property to true
-      const updateRequest = profileStore.put(profile); // Put the updated profile back into the object store
+        updateRequest.onsuccess = () => {
+          console.log('Default profile updated successfully:', profile);
+          callback(profile); // Callback with the updated profile
+        };
 
-      updateRequest.onsuccess = function (event) {
-        console.log('Default profile updated successfully:', profile);
-        callback(profile); // Callback with the updated profile
-      };
+        updateRequest.onerror = (event) => {
+          console.error('Error updating default profile:', event.target.error);
+          callback(null); // Error occurred
+        };
+      } else {
+        console.error('Profile not found:', profileName);
+        callback(null); // Profile not found
+      }
+    };
 
-      updateRequest.onerror = function (event) {
-        console.error('Error updating default profile:', event.target.error);
-        callback(null); // Error occurred
-      };
-    } else {
-      console.error('Profile not found:', profileName);
-      callback(null); // Profile not found
-    }
-  };
-
-  request.onerror = function (event) {
-    console.error('Error getting profile by name:', event.target.error);
+    getRequest.onerror = (event) => {
+      console.error('Error getting profile by name:', event.target.error);
+      callback(null); // Error occurred
+    };
+  } catch (error) {
+    console.error('Transaction error:', error);
     callback(null); // Error occurred
-  };
+  }
 }
+
+//***********-CONTEXT MENU MANAGEMENT-*************/
+
+// Create the context menu
+function createContextMenu() {
+  try {
+    console.log('Create context menu.');
+    chrome.contextMenus.create({
+      id: 'profileManager',
+      title: 'Profiles',
+      contexts: ['all'],
+    });
+  } catch (error) {
+    console.error('Error creating context menu:', error);
+  }
+}
+
+// Edit context menu
+function loadSubMenuProfiles() {
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === 'profileManager') {
+      // Remove any existing submenu items
+      chrome.contextMenus.removeAll(() => {
+        // Create the main context menu again
+        createContextMenu();
+        // Get all profiles and create submenu items
+        getAllProfiles(async (profiles) => {
+          if (profiles.length === 0) {
+            console.log("No profiles found");
+            chrome.contextMenus.create({
+              id: 'noProfiles',
+              parentId: 'profileManager',
+              title: 'No profiles available',
+              contexts: ['all'],
+            });
+          } else {
+            profiles.forEach((profile) => {
+              if (profile.default){
+                title = `> ${profile.profile_name}`;
+                defaultProfile = profile;
+              }else{
+                title = ` ${profile.profile_name}`;
+              }
+              chrome.contextMenus.create({
+                id: `profile-${profile.id}`,
+                parentId: 'profileManager',
+                title: title,
+                contexts: ['all'],
+              });
+            });
+          }
+        });
+      });
+    } else {
+      console.log('Profile clicked:', info.menuItemId);
+    }
+  });
+}
+
+// Initialize context menu and submenu
+createContextMenu();
+loadSubMenuProfiles();
