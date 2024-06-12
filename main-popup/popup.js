@@ -3,15 +3,16 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function main() {
-  load_subExtention("text-note")
+ // load_subExtention("text-note","text-note-container");
+  load_subExtention('profileManager','ProfileManager');
 }
 
-function load_subExtention(url) {
-  fetch(chrome.runtime.getURL(url+"/index.html"))
+function load_subExtention(path,divTag) {
+  fetch(chrome.runtime.getURL(path+"/index.html"))
     .then(response => response.text())
     .then(data => {
       // Insert the fetched HTML content
-      const container = document.getElementById("text-note-container");
+      const container = document.getElementById(divTag);
       container.innerHTML = data;
 
       // Create a new document fragment to safely extract scripts
@@ -24,7 +25,7 @@ function load_subExtention(url) {
         const newScript = document.createElement('script');
 
         // Convert relative path to absolute path
-        const absoluteSrc = chrome.runtime.getURL('text-note/' + script.getAttribute('src'));
+        const absoluteSrc = chrome.runtime.getURL(path + '/' + script.getAttribute('src'));
         newScript.src = absoluteSrc;
         newScript.defer = true;
         document.body.appendChild(newScript);

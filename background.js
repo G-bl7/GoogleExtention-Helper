@@ -1,6 +1,17 @@
-//***********-DATABASE Management-*************/
+// background.js
+
+import { addNewProfile, getAllProfiles, setDefaultProfileByName, getDefaultProfile, deleteProfileByName, updateProfileName } from './profileManager/js/profileManager.js';
+
+// Handle extension installation
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') {
+    console.log('Welcome to G-bl7 Assistant 1.1');
+  }
+});
+
+//***********-DB Managment-*************/
+
 let db;
-let defaultProfile = null;
 
 console.log("Background start on run");
 
@@ -27,133 +38,17 @@ request.onupgradeneeded = (event) => {
     console.log('Profiles schema initialized.');
 
     profileStore.transaction.oncomplete = () => {
-      addNewProfile({ profile_name: 'Default', default: true });
-      addNewProfile({ profile_name: 'Vuln', default: false });
+      addNewProfile({ profile_name: 'Default', default: 1 }, db);
     };
   }
 };
-
-// Handle extension installation
-chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === 'install') {
-    console.log('Welcome to G-bl7 Assistant 1.1');
-  }
-});
-
-//***********-PROFILE MANAGEMENT-*************/
-
-// Add new profile
-function addNewProfile(profileData) {
-  if (!db) {
-    console.log('DB not available');
-    return;
-  }
-
-  try {
-    const transaction = db.transaction(['profiles'], 'readwrite');
-    const profileStore = transaction.objectStore('profiles');
-    const addRequest = profileStore.add(profileData);
-
-    addRequest.onsuccess = () => {
-      console.log('New profile added successfully');
-    };
-
-    addRequest.onerror = (event) => {
-      console.log('Error adding new profile:', event.target.error);
-    };
-  } catch (error) {
-    console.log('Transaction error:', error);
-  }
-}
-
-// Get all profiles
-function getAllProfiles(callback) {
-  if (!db) {
-    console.log('DB not available');
-    return;
-  }
-
-  try {
-    console.log('Getting all profiles');
-    const transaction = db.transaction(['profiles'], 'readonly');
-    const profileStore = transaction.objectStore('profiles');
-    const getAllRequest = profileStore.getAll();
-
-    getAllRequest.onsuccess = (event) => {
-      const profiles = event.target.result;
-      callback(profiles);
-    };
-
-    getAllRequest.onerror = (event) => {
-      console.log('Error getting all profiles:', event.target.error);
-      callback([]); // Return an empty array in case of error
-    };
-  } catch (error) {
-    console.log('Transaction error:', error);
-    callback([]); // Return an empty array in case of error
-  }
-}
-
-// Set the default profile by name
-function setDefaultProfileByName(oldProfileName, newProfileName) {
-  if (!db || oldProfileName == newProfileName) {
-    console.log('Set new profile abord.')
-    return;
-  }
-
-  try {
-    const transaction = db.transaction(['profiles'], 'readwrite');
-    const profileStore = transaction.objectStore('profiles');
-    const index = profileStore.index('profile_name');
-
-    // Change the old profile and set to False default flag
-    const getRequestOld = index.get(oldProfileName);
-    getRequestOld.onsuccess = (event) => {
-      const oldProfile = event.target.result;
-      if (oldProfile) {
-        oldProfile.default = false; // Update the 'default' property to false
-        const updateRequestOld = profileStore.put(oldProfile);
-        updateRequestOld.onsuccess = () => {
-          console.log('Old profile updated successfully:', oldProfile);
-        };
-        updateRequestOld.onerror = (event) => {
-          console.log('Error updating old profile:', event.target.error);
-        };
-      } else {
-        console.log('Old profile not found:', oldProfileName);
-      }
-    };
-
-    // set the new profile default flag to True
-    const getRequestNew = index.get(newProfileName);
-    getRequestNew.onsuccess = (event) => {
-      const newProfile = event.target.result;
-      if (newProfile) {
-        newProfile.default = true; // Update the 'default' property to true
-        const updateRequestNew = profileStore.put(newProfile);
-        updateRequestNew.onsuccess = () => {
-          console.log('New default profile updated successfully:', newProfile);
-        };
-        updateRequestNew.onerror = (event) => {
-          console.log('Error updating new default profile:', event.target.error);
-        };
-      } else {
-        console.log('New default profile not found:', newProfileName);
-      }
-    };
-
-  } catch (error) {
-    console.log('Transaction error:', error);
-  }
-}
-
 
 //***********-CONTEXT MENU MANAGEMENT-*************/
 
 // Create the Main context menu
 function createContextMenu() {
   try {
-    console.log('Create context menu.');
+    console.log('Create Main context menu.');
     chrome.contextMenus.create({
       id: 'profileManager',
       title: 'Profiles',
@@ -164,16 +59,18 @@ function createContextMenu() {
   }
 }
 
+// Create new profile map
+let profilesMap = new Map();
+
 // set sub menu with profiles
 function loadSubMenuProfilesPoc() {
   // Remove any existing submenu items
   chrome.contextMenus.removeAll(() => {
     // Create the main context menu again
     createContextMenu();
-    // Create new map
-    users = new Map()
     // Get all profiles and create submenu items
-    getAllProfiles(async (profiles) => {
+    getAllProfiles(db, (profiles) => {
+      console.log(profiles);
       if (profiles.length === 0) {
         console.log("No profiles found");
         chrome.contextMenus.create({
@@ -184,9 +81,9 @@ function loadSubMenuProfilesPoc() {
         });
       } else {
         profiles.forEach((profile) => {
+          let title;
           if (profile.default) {
             title = `> ${profile.profile_name}`;
-            defaultProfile = profile;
           } else {
             title = ` ${profile.profile_name}`;
           }
@@ -197,13 +94,7 @@ function loadSubMenuProfilesPoc() {
             contexts: ['all'],
           });
           // add profile user to map
-          users.set(`profile-${profile.id}`, profile);
-        });
-        chrome.contextMenus.create({
-          id: `AddNewProfile`,
-          parentId: 'profileManager',
-          title: 'Add Profile',
-          contexts: ['all'],
+          profilesMap.set(`profile-${profile.id}`, profile);
         });
       }
     });
@@ -214,16 +105,70 @@ function loadSubMenuProfilesPoc() {
 function loadProfiles2SubMenu() {
   chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === 'profileManager') {
-      loadSubMenuProfilesPoc()
-    } else if (users.has(info.menuItemId)) {
-      console.log('Set new Default profile.')
-      newProfile = users.get(info.menuItemId);
-      setDefaultProfileByName(defaultProfile.profile_name, newProfile.profile_name);
       loadSubMenuProfilesPoc();
-      defaultProfile = newProfile;
+    } else if (profilesMap.has(info.menuItemId)) {
+      //Set new Default profile.
+      console.log('Set new Default profile.');
+      let newProfile = profilesMap.get(info.menuItemId);
+      getDefaultProfile(db, (defaultProfile) => {
+        setDefaultProfileByName(db, defaultProfile.profile_name, newProfile.profile_name);
+      });
+      loadSubMenuProfilesPoc();
     }
   });
 }
+
+//***********-EVENT Handler-*************/
+
+// Handle messages from the popup
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'getAllProfiles') {
+    getAllProfiles(db, (profiles) => {
+      sendResponse({ profiles: profiles });
+    });
+    return true;
+  } else if (request.action === 'addNewProfile') {
+    addNewProfile(request.profileData, db);
+    sendResponse({});
+    return true;
+  } else if (request.action === 'updateProfileName') {
+    updateProfileName(db, request.oldProfileName, request.newProfileName);
+    sendResponse({});
+    return true;
+  } else if (request.action === 'setDefaultProfile') {
+    console.log('On background', request)
+    getDefaultProfile(db, (defaultProfile) => {
+      setDefaultProfileByName(db, defaultProfile.profile_name, request.profileName);
+    });
+    sendResponse({});
+    return true;
+  } else if (request.action === 'deleteProfile') {
+    getDefaultProfile(db, (profile) => {
+      if (profile.profile_name == request.profileName) {
+        console.log("can't delete default profile.")
+        sendResponse({ onsucces: false });
+        return true;
+      } else {
+        deleteProfileByName(db, request.profileName);
+        sendResponse({ onsucces: true });
+        return true;
+      }
+    });
+  } else if (request.action === 'getDefaultProfile') {
+    getDefaultProfile(db, (profile) => {
+      sendResponse({ profile: profile });
+    });
+    return true;
+  } else if (request.action === 'loadSubMenuProfilesPoc') {
+    loadSubMenuProfilesPoc();
+    sendResponse({});
+    return true;
+  }
+  return false;
+});
+
+
+//***********-INIT-*************/
 
 // Initialize context menu and submenu
 createContextMenu();
