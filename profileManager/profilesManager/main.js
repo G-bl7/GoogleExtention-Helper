@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // Load Profiles of to table
 function loadProfiles() {
     chrome.runtime.sendMessage({ action: 'getAllProfiles' }, (response) => {
-        console.log('-get reponse',response)
         const profiles = response.data;
         const defaultProfileRow = document.getElementById('defaultProfileRow');
         const profilesList = document.getElementById('profilesList');

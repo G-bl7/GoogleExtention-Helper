@@ -2,56 +2,61 @@
 <html>
 
 <head>
-  <link rel="stylesheet" href="text-not-manager.css" >
-  <title>Edit Vun Data</title>
-  
+  <link rel="stylesheet" href="text-not-manager.css">
+  <title>Text Note</title>
+  <style>
+   
+  </style>
 </head>
 
 <body>
-  <h3>Edit Vun Data</h3>
-  <div>
-    <input type="text" id="searchText" placeholder="Search text, note, or date">
-    <button id="searchButton">Search</button>
-    <button id="exportButton">Export</button>
-    <button id="importButton">Import</button>
-    <button id="deleteSelectedButton">Delete Selected</button>
-    <input type="file" id="importFile" style="display: none;">
-    <select id="filterTag">
-      <option value="">All Tags</option>
-      <option value="Urgent">Urgent</option>
-      <option value="Important">Important</option>
-      <option value="High Priority">High Priority</option>
-      <option value="Deadline">Deadline</option>
-      <option value="Follow-up">Follow-up</option>
-    </select>
-    <button id="filterButton">Filter</button>
-    
-    <!-- More Options Button -->
-    <div class="dropdown">
-      <button id="moreOptionsButton">More Opt</button>
-      <div class="dropdown-content">
-        <a href="#" id="importTextData">Import Text Data</a>
-        <input type="file" id="importFileText" style="display: none;">
-      </div>
+  <div class="container">
+    <h3 class="topTitle">Edit Text Note</h3>
+
+    <div>
+      <input type="checkbox" id="UseDefaultProfile" title="Default Profile in use" checked hidden>
+      <button id="loadUnprofiledText">Unprofiled</button>
+      <button id="exportButton">Export</button>
+      <input type="file" id="importFile" style="display: none;">
+      <button id="importButton">Import</button>
+      <button id="deleteSelectedButton">Delete Selected</button>
+    </div>
+    <br>
+    <br>
+    <!-- Display total rows and filtered results -->
+    <div class="result-info">
+      <p>Profile Name: <span id="profleName">0</span></p>
+      <p>Profile ID: <span id="profleId">0</span></p>
+      <p>Total Rows: <span id="totalRows">0</span></p>
+      <p>Filtered Results: <span id="filteredResults">0</span></p>
+      <p>Selected Row: <span id="SelectedRow">0</span></p>
+
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAll"></th>
+            <th>
+              <label for="searchText">Text</label><br>
+              <input type="text" id="searchText" class="search-input" placeholder="Search text">
+            </th>
+            <th>
+              <label for="searchNote">Note</label><br>
+              <input type="text" id="searchNote" class="search-input" placeholder="Search note">
+            </th>
+            <th>Timestamp</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="TextNoteTbody">
+          <!-- Data rows will be inserted here -->
+        </tbody>
+      </table>
     </div>
   </div>
-  <p>Total Rows: <span id="totalRows">0</span></p>
-  <p>Filtered Results: <span id="filteredResults">0</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th><input type="checkbox" id="selectAll"></th>
-        <th>Text</th>
-        <th>Note</th>
-        <th>Timestamp</th>
-        <th>Tag</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="vunTableBody">
-      <!-- Data rows will be inserted here -->
-    </tbody>
-  </table>
+
   <script src="text-not-manager.js"></script>
 </body>
 

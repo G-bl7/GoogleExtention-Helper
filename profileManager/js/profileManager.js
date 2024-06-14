@@ -1,4 +1,16 @@
 console.log('Loading and executing /profileManager/js/profileManager.js')
+
+export function initDbProfileManbager(db) {
+    const profileStore = db.createObjectStore('profiles', { keyPath: 'id', autoIncrement: true });
+    profileStore.createIndex('profile_name', 'profile_name', { unique: true });
+    profileStore.createIndex('default', 'default', { unique: false });
+    console.log('Profiles schema initialized.');
+
+    profileStore.transaction.oncomplete = () => {
+        addNewProfile({ profile_name: 'Default', default: 1 }, db);
+    };
+}
+
 // Add new profile
 export function addNewProfile(profileData, db) {
     if (!db) {
@@ -218,17 +230,7 @@ export function getDefaultProfile(db, callback) {
     }
 }
 
-export function initDbProfileManbager(db) {
-    const profileStore = db.createObjectStore('profiles', { keyPath: 'id', autoIncrement: true });
-    profileStore.createIndex('profile_name', 'profile_name', { unique: true });
-    profileStore.createIndex('default', 'default', { unique: false });
-    console.log('Profiles schema initialized.');
-
-    profileStore.transaction.oncomplete = () => {
-        addNewProfile({ profile_name: 'Default', default: 1 }, db);
-    };
-}
-
+// EVE?
 export function profilesOnMessageHandler(request, db, sendResponse) {
     
     if (request.action === 'getAllProfiles') {
@@ -267,5 +269,4 @@ export function profilesOnMessageHandler(request, db, sendResponse) {
         });
         return true;
     }
-    sendResponse({});
 }

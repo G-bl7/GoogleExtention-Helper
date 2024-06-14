@@ -2,15 +2,19 @@ console.log('Injected JS G-bl7 Assistant start running.');
 
 //  Get text From DB
 function main() {
-  texts = [{
-    text: 'compile',
-    note: 'Note'
-  }];
-
-  texts.forEach(item => {
-    let regex = new RegExp(`(${item.text})`, 'gi');
-    underlineText(document.body,regex,item.note)
-  })
+  chrome.runtime.sendMessage(
+    { action: 'getDefaultProfile' }, (reponse) => {
+      defaultProfile = reponse.data
+      chrome.runtime.sendMessage(
+        { action: 'getAllTextNote', profileID: defaultProfile.id }, (reponse) => {
+          reponse.data.forEach(item => {
+            let regex = new RegExp(`(${item.text})`, 'gi');
+            underlineText(document.body, regex, item.note)
+          });
+        }
+      );
+    }
+  );
 }
 
 // Function to underline text

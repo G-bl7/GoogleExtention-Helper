@@ -8,6 +8,14 @@ import {
   setDefaultProfileByName
 } from './profileManager/js/profileManager.js';
 
+import {
+  initDbTextNoteManager,
+  creatTextNoteContextMenu,
+  loadTextNoteOptBeahavor,
+  textNoteOnMessageHandler,
+  getAllTextNote
+} from './text-note/background/main.js'
+
 // Handle extension installation
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
@@ -33,6 +41,7 @@ request.onsuccess = (event) => {
   db = event.target.result;
   // Load submenu profiles after the database is successfully opened
   loadSubMenuProfilesPoc();
+  loadTextNoteOptBeahavor(db, getDefaultProfile);
 };
 
 request.onupgradeneeded = (event) => {
@@ -41,6 +50,10 @@ request.onupgradeneeded = (event) => {
 
   if (!db.objectStoreNames.contains('profiles')) {
     initDbProfileManbager(db);
+  }
+
+  if (!db.objectStoreNames.contains('textNote')) {
+    initDbTextNoteManager(db);
   }
 };
 
@@ -52,7 +65,7 @@ function createContextMenu() {
   chrome.contextMenus.create({
     id: 'profileManager',
     title: 'Profiles',
-    contexts: ['all'],
+    contexts: ['page'],
   }, () => {
     if (chrome.runtime.lastError) {
       console.log('Error creating context menu:', chrome.runtime.lastError);
@@ -69,6 +82,7 @@ function loadSubMenuProfilesPoc() {
   chrome.contextMenus.removeAll(() => {
     // Create the main context menu again
     createContextMenu();
+    creatTextNoteContextMenu();
     // Create new Profile map
     profilesMap = new Map();
     // Get all profiles and create submenu items
@@ -124,6 +138,7 @@ function loadProfiles2SubMenu() {
   });
 }
 
+
 //***********-EVENT Handler-*************/
 
 // Handle messages from the popup
@@ -131,6 +146,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log('Get request:', request.action);
 
   profilesOnMessageHandler(request, db, sendResponse);
+  textNoteOnMessageHandler(db, request, sendResponse);
 
   if (request.action === 'loadSubMenuProfilesPoc') {
     loadSubMenuProfilesPoc();
@@ -144,3 +160,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Initialize context menu and submenu
 createContextMenu();
 loadProfiles2SubMenu();
+
+creatTextNoteContextMenu();
