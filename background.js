@@ -1,6 +1,12 @@
 // background.js
 
-import { addNewProfile, getAllProfiles, setDefaultProfileByName, getDefaultProfile, deleteProfileByName, updateProfileName } from './profileManager/js/profileManager.js';
+import {
+  profilesOnMessageHandler,
+  initDbProfileManbager,
+  getAllProfiles,
+  getDefaultProfile,
+  setDefaultProfileByName
+} from './profileManager/js/profileManager.js';
 
 // Handle extension installation
 chrome.runtime.onInstalled.addListener((details) => {
@@ -25,6 +31,8 @@ request.onerror = (event) => {
 request.onsuccess = (event) => {
   console.log('IndexedDB on success.');
   db = event.target.result;
+  // Load submenu profiles after the database is successfully opened
+  loadSubMenuProfilesPoc();
 };
 
 request.onupgradeneeded = (event) => {
@@ -32,14 +40,7 @@ request.onupgradeneeded = (event) => {
   db = event.target.result;
 
   if (!db.objectStoreNames.contains('profiles')) {
-    const profileStore = db.createObjectStore('profiles', { keyPath: 'id', autoIncrement: true });
-    profileStore.createIndex('profile_name', 'profile_name', { unique: true });
-    profileStore.createIndex('default', 'default', { unique: false });
-    console.log('Profiles schema initialized.');
-
-    profileStore.transaction.oncomplete = () => {
-      addNewProfile({ profile_name: 'Default', default: 1 }, db);
-    };
+    initDbProfileManbager(db);
   }
 };
 
@@ -47,16 +48,16 @@ request.onupgradeneeded = (event) => {
 
 // Create the Main context menu
 function createContextMenu() {
-  try {
-    console.log('Create Main context menu.');
-    chrome.contextMenus.create({
-      id: 'profileManager',
-      title: 'Profiles',
-      contexts: ['all'],
-    });
-  } catch (error) {
-    console.log('Error creating context menu:', error);
-  }
+  console.log('Create Main context menu.');
+  chrome.contextMenus.create({
+    id: 'profileManager',
+    title: 'Profiles',
+    contexts: ['all'],
+  }, () => {
+    if (chrome.runtime.lastError) {
+      console.log('Error creating context menu:', chrome.runtime.lastError);
+    }
+  });
 }
 
 // Create new profile map
@@ -68,9 +69,10 @@ function loadSubMenuProfilesPoc() {
   chrome.contextMenus.removeAll(() => {
     // Create the main context menu again
     createContextMenu();
+    // Create new Profile map
+    profilesMap = new Map();
     // Get all profiles and create submenu items
     getAllProfiles(db, (profiles) => {
-      console.log(profiles);
       if (profiles.length === 0) {
         console.log("No profiles found");
         chrome.contextMenus.create({
@@ -78,23 +80,26 @@ function loadSubMenuProfilesPoc() {
           parentId: 'profileManager',
           title: 'No profiles available',
           contexts: ['all'],
+        }, () => {
+          if (chrome.runtime.lastError) {
+            console.log('Error creating context menu item:', chrome.runtime.lastError);
+          }
         });
       } else {
         profiles.forEach((profile) => {
-          let title;
-          if (profile.default) {
-            title = `> ${profile.profile_name}`;
-          } else {
-            title = ` ${profile.profile_name}`;
-          }
+          let title = profile.default ? `> ${profile.profile_name}` : profile.profile_name;
           chrome.contextMenus.create({
-            id: `profile-${profile.id}`,
+            id: `${profile.id}`,
             parentId: 'profileManager',
             title: title,
             contexts: ['all'],
+          }, () => {
+            if (chrome.runtime.lastError) {
+              console.log('Error creating context menu item:', chrome.runtime.lastError);
+            }
           });
           // add profile user to map
-          profilesMap.set(`profile-${profile.id}`, profile);
+          profilesMap.set(`${profile.id}`, profile);
         });
       }
     });
@@ -107,13 +112,14 @@ function loadProfiles2SubMenu() {
     if (info.menuItemId === 'profileManager') {
       loadSubMenuProfilesPoc();
     } else if (profilesMap.has(info.menuItemId)) {
-      //Set new Default profile.
+      // Set new Default profile.
       console.log('Set new Default profile.');
       let newProfile = profilesMap.get(info.menuItemId);
       getDefaultProfile(db, (defaultProfile) => {
         setDefaultProfileByName(db, defaultProfile.profile_name, newProfile.profile_name);
+        // Reload the submenu profiles after setting the new default profile
+        loadSubMenuProfilesPoc();
       });
-      loadSubMenuProfilesPoc();
     }
   });
 }
@@ -122,51 +128,16 @@ function loadProfiles2SubMenu() {
 
 // Handle messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'getAllProfiles') {
-    getAllProfiles(db, (profiles) => {
-      sendResponse({ profiles: profiles });
-    });
-    return true;
-  } else if (request.action === 'addNewProfile') {
-    addNewProfile(request.profileData, db);
-    sendResponse({});
-    return true;
-  } else if (request.action === 'updateProfileName') {
-    updateProfileName(db, request.oldProfileName, request.newProfileName);
-    sendResponse({});
-    return true;
-  } else if (request.action === 'setDefaultProfile') {
-    console.log('On background', request)
-    getDefaultProfile(db, (defaultProfile) => {
-      setDefaultProfileByName(db, defaultProfile.profile_name, request.profileName);
-    });
-    sendResponse({});
-    return true;
-  } else if (request.action === 'deleteProfile') {
-    getDefaultProfile(db, (profile) => {
-      if (profile.profile_name == request.profileName) {
-        console.log("can't delete default profile.")
-        sendResponse({ onsucces: false });
-        return true;
-      } else {
-        deleteProfileByName(db, request.profileName);
-        sendResponse({ onsucces: true });
-        return true;
-      }
-    });
-  } else if (request.action === 'getDefaultProfile') {
-    getDefaultProfile(db, (profile) => {
-      sendResponse({ profile: profile });
-    });
-    return true;
-  } else if (request.action === 'loadSubMenuProfilesPoc') {
+  console.log('Get request:', request.action);
+
+  profilesOnMessageHandler(request, db, sendResponse);
+
+  if (request.action === 'loadSubMenuProfilesPoc') {
     loadSubMenuProfilesPoc();
-    sendResponse({});
     return true;
   }
-  return false;
+  return true;
 });
-
 
 //***********-INIT-*************/
 

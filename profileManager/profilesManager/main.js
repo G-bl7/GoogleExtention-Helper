@@ -1,3 +1,4 @@
+
 //***********-Buttun Event-*************/
 document.addEventListener('DOMContentLoaded', () => {
     loadProfiles();
@@ -23,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // Load Profiles of to table
 function loadProfiles() {
     chrome.runtime.sendMessage({ action: 'getAllProfiles' }, (response) => {
-        const profiles = response.profiles;
+        console.log('-get reponse',response)
+        const profiles = response.data;
         const defaultProfileRow = document.getElementById('defaultProfileRow');
         const profilesList = document.getElementById('profilesList');
 
@@ -102,14 +104,7 @@ function updateProfileName(oldProfileName, newProfileName) {
     });
     chrome.runtime.sendMessage({ action: 'loadSubMenuProfilesPoc'}, () => {
     });
-}
 
-function updateProfileInline(oldProfileName, newProfileName) {
-    if (oldProfileName !== newProfileName) {
-        updateProfileName(oldProfileName, newProfileName);
-    }
-    chrome.runtime.sendMessage({ action: 'loadSubMenuProfilesPoc'}, () => {
-    });
 }
 
 function setDefaultProfile(profileName) {

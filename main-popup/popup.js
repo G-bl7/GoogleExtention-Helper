@@ -3,12 +3,12 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function main() {
- // load_subExtention("text-note","text-note-container");
-  load_subExtention('profileManager','ProfileManager');
+  load_subExtention("text-note", "text-note-container");
+  load_subExtention('profileManager', 'ProfileManager');
 }
 
-function load_subExtention(path,divTag) {
-  fetch(chrome.runtime.getURL(path+"/index.html"))
+function load_subExtention(path, divTag) {
+  fetch(chrome.runtime.getURL(path + "/index.html"))
     .then(response => response.text())
     .then(data => {
       // Insert the fetched HTML content

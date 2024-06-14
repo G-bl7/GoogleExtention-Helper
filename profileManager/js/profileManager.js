@@ -1,3 +1,4 @@
+console.log('Loading and executing /profileManager/js/profileManager.js')
 // Add new profile
 export function addNewProfile(profileData, db) {
     if (!db) {
@@ -11,7 +12,7 @@ export function addNewProfile(profileData, db) {
         const addRequest = profileStore.add(profileData);
 
         addRequest.onsuccess = () => {
-            console.log('New profile added successfully: ',profileData.profile_name);
+            console.log('New profile added successfully: ', profileData.profile_name);
         };
 
         addRequest.onerror = (event) => {
@@ -30,6 +31,7 @@ export function getAllProfiles(db, callback) {
     }
 
     try {
+
         console.log('Getting all profiles');
         const transaction = db.transaction(['profiles'], 'readonly');
         const profileStore = transaction.objectStore('profiles');
@@ -43,6 +45,7 @@ export function getAllProfiles(db, callback) {
         getAllRequest.onerror = (event) => {
             console.log('Error getting all profiles:', event.target.error);
             callback([]); // Return an empty array in case of error
+
         };
     } catch (error) {
         console.log('Transaction error:', error);
@@ -213,4 +216,56 @@ export function getDefaultProfile(db, callback) {
         console.log('Transaction error:', error);
         callback(null); // Return null in case of error
     }
+}
+
+export function initDbProfileManbager(db) {
+    const profileStore = db.createObjectStore('profiles', { keyPath: 'id', autoIncrement: true });
+    profileStore.createIndex('profile_name', 'profile_name', { unique: true });
+    profileStore.createIndex('default', 'default', { unique: false });
+    console.log('Profiles schema initialized.');
+
+    profileStore.transaction.oncomplete = () => {
+        addNewProfile({ profile_name: 'Default', default: 1 }, db);
+    };
+}
+
+export function profilesOnMessageHandler(request, db, sendResponse) {
+    
+    if (request.action === 'getAllProfiles') {
+        getAllProfiles(db, (profiles) => {
+            sendResponse({ data: profiles });
+        });
+        return true;
+    } else if (request.action === 'addNewProfile') {
+        addNewProfile(request.profileData, db);
+        sendResponse({ data: 1 });
+        return true;
+    } else if (request.action === 'updateProfileName') {
+        updateProfileName(db, request.oldProfileName, request.newProfileName);
+        sendResponse({ data: 1 });
+        return true;
+    } else if (request.action === 'setDefaultProfile') {
+        getDefaultProfile(db, (defaultProfile) => {
+            setDefaultProfileByName(db, defaultProfile.profile_name, request.profileName);
+            sendResponse({ data: 1 });
+        });
+        return true;
+    } else if (request.action === 'deleteProfile') {
+        getDefaultProfile(db, (profile) => {
+            if (profile.profile_name === request.profileName) {
+                console.log("can't delete default profile.");
+                sendResponse({ data: 1 });
+            } else {
+                deleteProfileByName(db, request.profileName);
+                sendResponse({ data: 2 });
+            }
+        });
+        return true;
+    } else if (request.action === 'getDefaultProfile') {
+        getDefaultProfile(db, (profile) => {
+            sendResponse({ data: profile });
+        });
+        return true;
+    }
+    sendResponse({});
 }

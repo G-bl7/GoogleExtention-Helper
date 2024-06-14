@@ -1,9 +1,17 @@
-// Retrieve vunData from local storage
-chrome.storage.local.get({ vunData: [] }, (result) => {
-  // Get the current URL
-  const url = window.location.href;
-  console.log('running on',url)
-});
+console.log('Injected JS G-bl7 Assistant start running.');
+
+//  Get text From DB
+function main() {
+  texts = [{
+    text: 'compile',
+    note: 'Note'
+  }];
+
+  texts.forEach(item => {
+    let regex = new RegExp(`(${item.text})`, 'gi');
+    underlineText(document.body,regex,item.note)
+  })
+}
 
 // Function to underline text
 function underlineText(node, regex, note) {
@@ -18,7 +26,7 @@ function underlineText(node, regex, note) {
         fragment.appendChild(document.createTextNode(node.textContent.slice(lastIndex, matchIndex)));
 
         const span = document.createElement('span');
-        span.className = 'vun-underline';
+        span.className = 'saved-note';
         span.title = note;
         span.textContent = match;
         fragment.appendChild(span);
@@ -33,3 +41,6 @@ function underlineText(node, regex, note) {
     node.childNodes.forEach(child => underlineText(child, regex, note));
   }
 }
+
+// Start 
+main();
