@@ -1,21 +1,58 @@
+/* General styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    padding: 20px;
+    margin: 0; /* Ensure no default margin */
+}
+
+.topTitle {
+    text-align: center;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    height: 90vh; 
+    overflow: auto; /* Enable vertical scrolling if content overflows */
+    position: relative; /* Ensure relative positioning */
+    margin-top: 15px;
+}
+
+.button {
+    padding: 5px 10px;
+    margin: 5px;
+}
+
+.search-input {
+    width: calc(100% - 16px); /* Adjust for padding */
+    box-sizing: border-box;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+.table-container {
+    overflow-y: auto; /* Enable vertical scrolling for the table */
+    max-height: calc(100% - 90px); /* Adjust max height to fit remaining space */
+    margin-top: 10px; /* Adjust as needed */
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
 }
 
-th,
-td {
+th, td {
     padding: 10px;
-    border: 1px solid black;
+    border: 1px solid #ddd;
 }
 
 th {
     background-color: #f2f2f2;
-}
-
-button {
-    padding: 5px 10px;
-    margin: 5px;
 }
 
 table td:first-child {
@@ -23,47 +60,24 @@ table td:first-child {
     width: 100px;
 }
 
-.result-info {
-    position: absolute;
+.result-info-right,
+.result-info-left {
+    position: fixed;
+    background-color: #f0f0f0;
+    padding: 5px;
+    margin: 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    z-index: 1000;
+}
+
+.result-info-left {
+    top: 10px;
+    left: 10px;
+}
+
+.result-info-right {
     top: 10px;
     right: 10px;
-    background-color: #f0f0f0;
-    padding: 5px 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
 }
 
-.topTitle {
-    text-align: center;
-}
-
-/* General styling */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-    padding: 20px;
-}
-
-.container {
-    margin: 0 auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #fff;
-    /* Set max-width to prevent overflow */
-    max-width: 100%;
-    /* Adjust as needed */
-    overflow-x: auto;
-    /* Enable horizontal scrolling if necessary */
-}
-
-.search-input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 8px;
-    margin-bottom: 10px;
-}
-
-.table-container {
-    margin-top: 20px;
-}

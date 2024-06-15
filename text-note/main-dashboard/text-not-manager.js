@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('importButton').addEventListener('click', () => document.getElementById('importFile').click());
   document.getElementById('importFile').addEventListener('change', importTextNotes);
   document.getElementById('loadUnprofiledText').addEventListener('click', loadUnprofiledText)
+  
 });
 
 let textNotes = []; // Variable to store the main data
@@ -21,7 +22,7 @@ function loadTextNote() {
       (response) => {
         const defaultProfile = response.data;
         document.getElementById('profleName').textContent = defaultProfile.profile_name;
-        document.getElementById('profleId').textContent = defaultProfile.id;
+        document.getElementById('profleId').textContent = " / " + defaultProfile.id;
         chrome.runtime.sendMessage(
           { action: 'getAllTextNote', profileID: defaultProfile.id },
           (response) => {
@@ -34,7 +35,7 @@ function loadTextNote() {
     );
   } else {
     document.getElementById('profleName').textContent = 'SYSTEM';
-    document.getElementById('profleId').textContent = '-*-';
+    document.getElementById('profleId').textContent = '/ ';
 
     chrome.runtime.sendMessage(
       { action: 'getAllTextNote', profileID: null },
@@ -239,26 +240,34 @@ function importTextNotes(event) {
   if (file) {
     const reader = new FileReader();
     reader.onload = function (e) {
-      const importedNotes = JSON.parse(e.target.result);
+      const fileContent = e.target.result;
+      let importedNotes;
+
+      try {
+        importedNotes = JSON.parse(fileContent);
+      } catch (error) {
+        // If JSON parsing fails, treat the content as plain text
+        importedNotes = fileContent.split('\n').filter(line => line.trim() !== '').map(text => ({
+          text: text,
+          note: "Default Note", // You can set a default value or derive this differently
+          timestamp: Date.now() // Or any logic to generate a timestamp
+        }));
+      }
+
       importedNotes.forEach((item) => {
-        chrome.runtime.sendMessage({ action: 'getDefaultProfile' }, (reponse) => {
-          defaultProfile = reponse.data;
+        chrome.runtime.sendMessage({ action: 'getDefaultProfile' }, (response) => {
+          const defaultProfile = response.data;
           item.profileID = defaultProfile.id;
           chrome.runtime.sendMessage({ action: 'addNewTextNote', textNote: item }, (response) => {
-          })
-        })
+            // Handle response if needed
+          });
+        });
       });
+
       textNotes = textNotes.concat(importedNotes); // Add the imported notes to the existing array
       displayTextNote(textNotes);
       document.getElementById('totalRows').textContent = textNotes.length;
     };
     reader.readAsText(file);
   }
-}
-
-function loadUnprofiledText() {
-  const box = document.getElementById('UseDefaultProfile');
-  box.checked = !box.checked;
-  document.getElementById('loadUnprofiledText').textContent = box.checked ? 'Unprofiled' : 'profiled';
-  loadTextNote();
 }

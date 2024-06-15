@@ -5,11 +5,21 @@
   <link rel="stylesheet" href="text-not-manager.css">
   <title>Text Note</title>
   <style>
-   
+
   </style>
 </head>
 
 <body>
+  <!-- Display total rows and filtered results -->
+  <div class="result-info-left">
+    <p>Profile Name: <span id="profleName">0</span><span id="profleId">0</span></p>
+    <p>Total Rows: <span id="totalRows">0</span></p>
+  </div>
+  <div class="result-info-right">
+    <p>Filtered Results: <span id="filteredResults">0</span></p>
+    <p>Selected Row: <span id="SelectedRow">0</span></p>
+  </div>
+
   <div class="container">
     <h3 class="topTitle">Edit Text Note</h3>
 
@@ -20,17 +30,6 @@
       <input type="file" id="importFile" style="display: none;">
       <button id="importButton">Import</button>
       <button id="deleteSelectedButton">Delete Selected</button>
-    </div>
-    <br>
-    <br>
-    <!-- Display total rows and filtered results -->
-    <div class="result-info">
-      <p>Profile Name: <span id="profleName">0</span></p>
-      <p>Profile ID: <span id="profleId">0</span></p>
-      <p>Total Rows: <span id="totalRows">0</span></p>
-      <p>Filtered Results: <span id="filteredResults">0</span></p>
-      <p>Selected Row: <span id="SelectedRow">0</span></p>
-
     </div>
 
     <div class="table-container">
@@ -56,7 +55,6 @@
       </table>
     </div>
   </div>
-
   <script src="text-not-manager.js"></script>
 </body>
 

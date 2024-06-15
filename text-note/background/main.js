@@ -36,7 +36,7 @@ export function getAllTextNote(db, profileID, callback) {
 
     request.onsuccess = function (event) {
         const result = event.target.result;
-        console.log('Request succeeded:', result);
+        console.log('Request succeeded:');
         callback(result);
     };
 
