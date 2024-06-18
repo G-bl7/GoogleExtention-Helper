@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function main() {
   load_subExtention("text-note", "text-note-container");
   load_subExtention('profileManager', 'ProfileManager');
+  load_subExtention('extractor-regx', 'extractor-regx-container');
 }
 
 function load_subExtention(path, divTag) {

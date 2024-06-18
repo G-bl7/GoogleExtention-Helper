@@ -3,17 +3,20 @@ console.log('Loading and executing text-note/background/main.js');
 
 // Init DB for Text -> Note relation.
 export function initDbTextNoteManager(db) {
+
     if (!db) {
         console.log('DB not available');
         return;
     }
-    const textNote = db.createObjectStore('textNote', { keyPath: 'id', autoIncrement: true });
-    textNote.createIndex('profileID', 'profileID', { unique: false });
-    textNote.createIndex('text', 'text', { unique: false });
-    textNote.createIndex('note', 'note', { unique: false });
-    textNote.createIndex('timestamp', 'timestamp', { unique: false });
-
-    console.log('Text schema initialized.');
+    if (!db.objectStoreNames.contains('textNote')) {
+        const textNote = db.createObjectStore('textNote', { keyPath: 'id', autoIncrement: true });
+        textNote.createIndex('profileID', 'profileID', { unique: false });
+        
+        textNote.createIndex('text', 'text', { unique: false });
+        textNote.createIndex('note', 'note', { unique: false });
+        textNote.createIndex('timestamp', 'timestamp', { unique: false });
+        console.log('Text schema initialized.');
+    }
 }
 
 export function getAllTextNote(db, profileID, callback) {
@@ -134,7 +137,8 @@ export function textNoteOnMessageHandler(db, request, sendResponse) {
 
     if (!db) {
         console.log('DB not available');
-        return;
+        sendResponse({ data: 0 });
+        return false;
     }
 
     if (request.action === 'getAllTextNote') {

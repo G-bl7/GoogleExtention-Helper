@@ -1,18 +1,26 @@
 console.log('Loading and executing /profileManager/js/profileManager.js')
 
 export function initDbProfileManbager(db) {
-    const profileStore = db.createObjectStore('profiles', { keyPath: 'id', autoIncrement: true });
-    profileStore.createIndex('profile_name', 'profile_name', { unique: true });
-    profileStore.createIndex('default', 'default', { unique: false });
-    console.log('Profiles schema initialized.');
+    if (!db) {
+        console.log('DB not available');
+        return;
+    }
+    if (!db.objectStoreNames.contains('profiles')) {
 
-    profileStore.transaction.oncomplete = () => {
-        addNewProfile({ profile_name: 'Default', default: 1 }, db);
-    };
+        const profileStore = db.createObjectStore('profiles', { keyPath: 'id', autoIncrement: true });
+        profileStore.createIndex('profile_name', 'profile_name', { unique: true });
+        profileStore.createIndex('default', 'default', { unique: false });
+        console.log('Profiles schema initialized.');
+
+        profileStore.transaction.oncomplete = () => {
+            addNewProfile({ profile_name: 'Default', default: 1 }, db);
+        };
+    }
 }
 
 // Add new profile
 export function addNewProfile(profileData, db) {
+    console.log('Addinig New Profile',profileData)
     if (!db) {
         console.log('DB not available');
         return;
@@ -232,7 +240,7 @@ export function getDefaultProfile(db, callback) {
 
 // EVE?
 export function profilesOnMessageHandler(request, db, sendResponse) {
-    
+
     if (request.action === 'getAllProfiles') {
         getAllProfiles(db, (profiles) => {
             sendResponse({ data: profiles });
