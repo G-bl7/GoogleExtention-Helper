@@ -12,7 +12,7 @@
 <body>
   <!-- Display total rows and filtered results -->
   <div class="result-info-left">
-    <p>Profile Name: <span id="profleName">0</span><span id="profleId">0</span></p>
+    <p>Profile Name: <span id="profleName">0</span> / <span id="profileId">0</span></input></p>
     <p>Total Rows: <span id="totalRows">0</span></p>
   </div>
   <div class="result-info-right">
@@ -22,17 +22,18 @@
 
   <div class="container">
     <h3 class="topTitle">Edit Text Note</h3>
-
     <div>
       <input type="checkbox" id="UseDefaultProfile" title="Default Profile in use" checked hidden>
-      <button id="loadUnprofiledText">Unprofiled</button>
       <button id="exportButton">Export</button>
       <input type="file" id="importFile" style="display: none;">
       <button id="importButton">Import</button>
       <button id="deleteSelectedButton">Delete Selected</button>
     </div>
+    <div id="multi-line-loader">
+      <div class="line line1"></div><div class="line line2"></div><div class="line line3"></div><div class="line line4"></div>
+    </div>
 
-    <div class="table-container">
+    <div class="table-container" >
       <table>
         <thead>
           <tr>

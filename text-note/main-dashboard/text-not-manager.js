@@ -1,12 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const defaultProfile = getUrlParams(window.location.href);
+
+  document.getElementById("profleName").textContent =
+    defaultProfile.profile_name;
+  document.getElementById("profileId").textContent = defaultProfile.id;
+
   loadTextNote();
   selectAllEvent();
+
   document
     .getElementById("deleteSelectedButton")
     .addEventListener("click", multiDeleteTextNote);
   document
     .getElementById("exportButton")
-    .addEventListener("click", exportSelectedTextNotes); // Add this line
+    .addEventListener("click", exportSelectedTextNotes);
   document
     .getElementById("importButton")
     .addEventListener("click", () =>
@@ -15,52 +22,39 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("importFile")
     .addEventListener("change", importTextNotes);
-  document
-    .getElementById("loadUnprofiledText")
-    .addEventListener("click", loadUnprofiledText);
+
+  hideLoader(); // Hide loader after load is complete
 });
 
-let textNotes = []; // Variable to store the main data
+let textNotes = [];
 let SelectedRow = 0;
 
 function loadTextNote() {
-  const useDefaultProfile =
-    document.getElementById("UseDefaultProfile").checked;
+  showLoader();
   document.getElementById("SelectedRow").textContent = 0;
+  document.getElementById("searchText").value = "";
+  document.getElementById("searchNote").value = "";
 
-  if (useDefaultProfile) {
-    chrome.runtime.sendMessage({ action: "getDefaultProfile" }, (response) => {
-      const defaultProfile = response.data;
-      document.getElementById("profleName").textContent =
-        defaultProfile.profile_name;
-      document.getElementById("profleId").textContent = defaultProfile.id;
-      chrome.runtime.sendMessage(
-        { action: "getAllTextNote", profileID: defaultProfile.id },
-        (response) => {
-          textNotes = response.data; // Store fetched data in textNotes
-          displayTextNote(textNotes);
-          document.getElementById("totalRows").textContent = textNotes.length;
-        }
-      );
-    });
-  } else {
-    document.getElementById("profleName").textContent = "SYSTEM";
-    document.getElementById("profleId").textContent = "-*-";
+  const profileID = Number(document.getElementById("profileId").textContent);
 
-    chrome.runtime.sendMessage(
-      { action: "getAllTextNote", profileID: null },
-      (response) => {
-        textNotes = response.data; // Store fetched data in textNotes
-        displayTextNote(textNotes);
-        document.getElementById("totalRows").textContent = textNotes.length;
-      }
-    );
-  }
+  showLoader(); // Show loader before starting the load process
+
+  chrome.runtime.sendMessage(
+    { action: "getAllTextNote", profileID },
+    (response) => {
+      textNotes = response.data || [];
+      displayTextNote(textNotes);
+      document.getElementById("totalRows").textContent = textNotes.length;
+      hideLoader(); // Hide loader after load is complete
+    }
+  );
+  hideLoader();
 }
 
 function displayTextNote(textNotes) {
   const tableBody = document.getElementById("TextNoteTbody");
   tableBody.innerHTML = "";
+  document.getElementById("selectAll").checked = false;
 
   textNotes.forEach((item, index) => {
     const row = document.createElement("tr");
@@ -73,27 +67,20 @@ function displayTextNote(textNotes) {
     checkbox.dataset.index = index;
     selectCell.appendChild(checkbox);
 
-    // Event listener for checkbox
     checkbox.addEventListener("change", function () {
-      if (this.checked) {
-        SelectedRow += 1;
-        console.log("SelectedRow:", SelectedRow); // Output for testing
-      } else {
-        SelectedRow -= 1;
-        console.log("UnSelectedRow:", SelectedRow); // Output for testing
-      }
+      SelectedRow += this.checked ? 1 : -1;
       document.getElementById("SelectedRow").textContent = SelectedRow;
     });
 
     const textCell = document.createElement("td");
-    textCell.contentEditable = "true";
+    textCell.contentEditable = true;
     textCell.textContent = item.text || "";
     textCell.addEventListener("blur", () =>
       updateTextNote(item.id, "text", textCell.textContent)
     );
 
     const noteCell = document.createElement("td");
-    noteCell.contentEditable = "true";
+    noteCell.contentEditable = true;
     noteCell.textContent = item.note || "";
     noteCell.addEventListener("blur", () =>
       updateTextNote(item.id, "note", noteCell.textContent)
@@ -105,10 +92,7 @@ function displayTextNote(textNotes) {
     const actionsCell = document.createElement("td");
     const deleteButton = document.createElement("button");
     deleteButton.textContent = "Delete";
-    deleteButton.addEventListener("click", () => {
-      deleteTextNoteItem(item.id);
-      location.reload();
-    }); // Pass textNoteID to delete
+    deleteButton.addEventListener("click", () => deleteTextNoteItem(item.id));
     actionsCell.appendChild(deleteButton);
 
     row.appendChild(selectCell);
@@ -120,51 +104,35 @@ function displayTextNote(textNotes) {
     tableBody.appendChild(row);
   });
 
-  // Add event listeners for search input fields
-  const searchText = document.getElementById("searchText");
-  const searchNote = document.getElementById("searchNote");
-
-  searchText.addEventListener("input", filterTextNotes);
-  searchNote.addEventListener("input", filterTextNotes);
+  ["searchText", "searchNote"].forEach((id) =>
+    document.getElementById(id).addEventListener("input", filterTextNotes)
+  );
 }
 
 function updateTextNote(textNoteID, field, newValue) {
   chrome.runtime.sendMessage(
-    {
-      action: "updateTextNote",
-      textNoteID: textNoteID,
-      field: field,
-      newValue: newValue,
-    },
+    { action: "updateTextNote", textNoteID, field, newValue },
     (response) => {
-      if (response.success) {
-        console.log(
-          `Successfully updated ${field} for text note ID ${textNoteID}`
-        );
-        // Optionally, handle success UI update if needed
-      } else {
+      if (!response.data) {
         console.error(
           `Failed to update ${field} for text note ID ${textNoteID}`
         );
-        // Optionally, handle failure UI update if needed
       }
     }
   );
 }
 
 function deleteTextNoteItem(textNoteID) {
+  showLoader(); // Show loader before starting the delete process
   chrome.runtime.sendMessage(
-    {
-      action: "deleteTextNote",
-      textNoteID: textNoteID,
-    },
+    { action: "deleteTextNote", textNoteID },
     (response) => {
-      if (response.success) {
-        console.log(`Successfully deleted text note ID ${textNoteID}`);
+      if (response.data) {
+        loadTextNote();
       } else {
         console.error(`Failed to delete text note ID ${textNoteID}`);
-        // Optionally, handle failure UI update if needed
       }
+      hideLoader(); // Hide loader after deletion process
     }
   );
 }
@@ -186,63 +154,67 @@ function filterTextNotes() {
   const searchNoteValue = document
     .getElementById("searchNote")
     .value.toLowerCase();
-
-  // Filter the main data (textNotes) based on search inputs
-  const filteredData = textNotes.filter((item) => {
-    const textMatch = item.text.toLowerCase().includes(searchTextValue);
-    const noteMatch = item.note.toLowerCase().includes(searchNoteValue);
-    return textMatch && noteMatch;
-  });
-
-  // Update filtered results count
+  const filteredData = textNotes.filter(
+    (item) =>
+      item.text.toLowerCase().includes(searchTextValue) &&
+      item.note.toLowerCase().includes(searchNoteValue)
+  );
   document.getElementById("filteredResults").textContent = filteredData.length;
-
-  displayTextNote(filteredData); // Update the table with filtered data
+  displayTextNote(filteredData);
 }
 
 function selectAllEvent() {
-  // Event listener for 'Select All' checkbox
   const selectAllCheckbox = document.getElementById("selectAll");
   selectAllCheckbox.addEventListener("change", function () {
     const checkboxes = document.querySelectorAll(".select-row");
     checkboxes.forEach((checkbox) => {
-      checkbox.checked = selectAllCheckbox.checked;
-      // Manually trigger change event
+      checkbox.checked = this.checked;
       checkbox.dispatchEvent(new Event("change"));
     });
   });
 }
 
 function multiDeleteTextNote() {
+  showLoader(); // Show loader before starting the delete process
   const checkboxes = document.querySelectorAll(".select-row:checked");
-  checkboxes.forEach((checkbox) => {
-    chrome.runtime.sendMessage(
-      {
-        action: "deleteTextNote",
-        textNoteID: checkbox.itemID,
-      },
-      (response) => {
-        if (response.success) {
-          console.log(`Successfully deleted text note ID ${checkbox.itemID}`);
-        } else {
-          console.error(`Failed to delete text note ID ${checkbox.itemID}`);
-          // Optionally, handle failure UI update if needed
-        }
-      }
-    );
+  const deletePromises = Array.from(checkboxes).map(
+    (checkbox) =>
+      new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage(
+          { action: "deleteTextNote", textNoteID: checkbox.itemID },
+          (response) => {
+            if (response.data) {
+              resolve();
+            } else {
+              console.error(`Failed to delete text note ID ${checkbox.itemID}`);
+              reject();
+            }
+          }
+        );
+      })
+  );
+
+  Promise.all(deletePromises).then(() => {
+    loadTextNote();
+    hideLoader(); // Hide loader after all deletions are processed
   });
-  location.reload();
 }
 
 function exportSelectedTextNotes() {
   const selectedNotes = [];
   const checkboxes = document.querySelectorAll(".select-row:checked");
-  checkboxes.forEach((checkbox) => {
-    const index = checkbox.dataset.index;
-    const { profileID, id, ...noteWithoutID } = textNotes[index]; // Exclude profileID and id
-    selectedNotes.push(noteWithoutID);
-  });
-
+  if (checkboxes.length === 0) {
+    // If no checkboxes are checked, export all text notes
+    textNotes.forEach(({ profileID, id, ...noteWithoutID }) => {
+      selectedNotes.push(noteWithoutID);
+    });
+  } else {
+    checkboxes.forEach((checkbox) => {
+      const index = checkbox.dataset.index;
+      const { profileID, id, ...noteWithoutID } = textNotes[index]; // Exclude profileID, id, and timestamp
+      selectedNotes.push(noteWithoutID);
+    });
+  }
   const json = JSON.stringify(selectedNotes, null, 2);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -255,37 +227,107 @@ function exportSelectedTextNotes() {
 }
 
 function importTextNotes(event) {
+  showLoader(); // Show loader before starting the load process
   const file = event.target.files[0];
   if (file) {
     const reader = new FileReader();
+
+    const fileExtension = file.name.split(".").pop().toLowerCase();
+
     reader.onload = function (e) {
-      const importedNotes = JSON.parse(e.target.result);
-      importedNotes.forEach((item) => {
+      const fileContent = e.target.result;
+      if (fileExtension === "json") {
+        processJSON(fileContent);
+      } else {
+        const lines = fileContent.split(/\r?\n/);
+        processLines(lines);
+      }
+    };
+
+    reader.readAsText(file);
+
+    async function processLines(lines) {
+      const defaultProfile = await getDefaultProfile();
+
+      for (let line of lines) {
+        line = line.trim();
+        if (line === "") continue;
+        item = {
+          text: line,
+          note: "/",
+          profileID: null,
+          timestamp: new Date().getTime(),
+        };
+
+        item.profileID = defaultProfile.id;
+
+        chrome.runtime.sendMessage({
+          action: "addNewTextNote",
+          textNote: item,
+        });
+      }
+
+      loadTextNote();
+      document.getElementById("totalRows").textContent = textNotes.length;
+      hideLoader(); // Hide loader after load is complete
+    }
+
+    async function processJSON(jsonContent) {
+      let jsonArray;
+      try {
+        jsonArray = JSON.parse(jsonContent);
+      } catch (error) {
+        console.error("Invalid JSON content:", error);
+        hideLoader(); // Hide loader if there's an error
+        return;
+      }
+      const defaultProfile = await getDefaultProfile();
+
+      for (let item of jsonArray) {
+        item.profileID = defaultProfile.id;
+
+        chrome.runtime.sendMessage({
+          action: "addNewTextNote",
+          textNote: item,
+        });
+      }
+      console.log("Done");
+      loadTextNote();
+      document.getElementById("totalRows").textContent = textNotes.length;
+      hideLoader(); // Hide loader after load is complete
+    }
+
+    function getDefaultProfile() {
+      return new Promise((resolve) => {
         chrome.runtime.sendMessage(
           { action: "getDefaultProfile" },
-          (reponse) => {
-            defaultProfile = reponse.data;
-            item.profileID = defaultProfile.id;
-            chrome.runtime.sendMessage(
-              { action: "addNewTextNote", textNote: item },
-              (response) => {}
-            );
+          (response) => {
+            if (response.data) {
+              resolve(response.data);
+            } else {
+              console.error("Failed to fetch default profile");
+              hideLoader(); // Hide loader if there's an error
+            }
           }
         );
       });
-      textNotes = textNotes.concat(importedNotes); // Add the imported notes to the existing array
-      displayTextNote(textNotes);
-      document.getElementById("totalRows").textContent = textNotes.length;
-    };
-    reader.readAsText(file);
+    }
   }
 }
 
-function loadUnprofiledText() {
-  const box = document.getElementById("UseDefaultProfile");
-  box.checked = !box.checked;
-  document.getElementById("loadUnprofiledText").textContent = box.checked
-    ? "Unprofiled"
-    : "profiled";
-  loadTextNote();
+function getUrlParams(url) {
+  const params = new URLSearchParams(url.split("?")[1]);
+
+  return {
+    id: params.get("id"),
+    profile_name: params.get("name"),
+  };
+}
+
+function showLoader() {
+  document.getElementById("multi-line-loader").style.display = "block";
+}
+
+function hideLoader() {
+  document.getElementById("multi-line-loader").style.display = "none";
 }
