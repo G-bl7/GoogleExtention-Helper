@@ -282,6 +282,7 @@ export function profilesOnMessageHandler(request, db, sendResponse) {
     });
     return true;
   } else if (request.action === "getProfileById") {
+    console.log(request);
     getProfileById(db, request.id, (profile) => {
       sendResponse({ data: profile });
     });
@@ -305,19 +306,19 @@ export function getProfileById(db, id, callback) {
     getRequest.onsuccess = (event) => {
       const profile = event.target.result;
       if (profile) {
-        callback(profile); // Pass the profile to the callback
+        callback(profile);
       } else {
         console.log(`Profile with id ${id} not found.`);
-        callback(null); // Return null if no profile found with the given id
+        callback(null);
       }
     };
 
     getRequest.onerror = (event) => {
       console.log(`Error fetching profile with id ${id}:`, event.target.error);
-      callback(null); // Return null in case of error
+      callback(null);
     };
   } catch (error) {
     console.log("Transaction error:", error);
-    callback(null); // Return null in case of error
+    callback(null);
   }
 }

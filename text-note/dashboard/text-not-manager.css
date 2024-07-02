@@ -17,7 +17,7 @@ body {
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: #fff;
-  height: 90vh;
+  height: 87vh;
   overflow: auto; /* Enable vertical scrolling if content overflows */
   position: relative; /* Ensure relative positioning */
   margin-top: 15px;
@@ -83,6 +83,7 @@ table td:first-child {
 }
 /* Add this CSS to your stylesheet */
 #multi-line-loader {
+  display: none;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -101,7 +102,7 @@ table td:first-child {
 }
 
 .line::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -112,13 +113,32 @@ table td:first-child {
   transform-origin: center bottom;
 }
 
-.line1 { color: #3498db; animation-delay: 0s; }
-.line2 { color: #e74c3c; animation-delay: 0.5s; }
-.line3 { color: #f1c40f; animation-delay: 1s; }
-.line4 { color: #2ecc71; animation-delay: 1.5s; }
-
-@keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.line1 {
+  color: #3498db;
+  animation-delay: 0s;
+}
+.line2 {
+  color: #e74c3c;
+  animation-delay: 0.5s;
+}
+.line3 {
+  color: #f1c40f;
+  animation-delay: 1s;
+}
+.line4 {
+  color: #2ecc71;
+  animation-delay: 1.5s;
 }
 
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.disabled {
+  pointer-events: none;
+  opacity: 0.5; /* Optional: to visually indicate that the table is disabled */
+}

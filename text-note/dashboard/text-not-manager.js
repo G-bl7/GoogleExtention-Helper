@@ -22,8 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("importFile")
     .addEventListener("change", importTextNotes);
-
-  hideLoader(); // Hide loader after load is complete
 });
 
 let textNotes = [];
@@ -37,18 +35,14 @@ function loadTextNote() {
 
   const profileID = Number(document.getElementById("profileId").textContent);
 
-  showLoader(); // Show loader before starting the load process
-
   chrome.runtime.sendMessage(
     { action: "getAllTextNote", profileID },
     (response) => {
       textNotes = response.data || [];
       displayTextNote(textNotes);
       document.getElementById("totalRows").textContent = textNotes.length;
-      hideLoader(); // Hide loader after load is complete
     }
   );
-  hideLoader();
 }
 
 function displayTextNote(textNotes) {
@@ -107,6 +101,7 @@ function displayTextNote(textNotes) {
   ["searchText", "searchNote"].forEach((id) =>
     document.getElementById(id).addEventListener("input", filterTextNotes)
   );
+  hideLoader();
 }
 
 function updateTextNote(textNoteID, field, newValue) {
@@ -123,7 +118,7 @@ function updateTextNote(textNoteID, field, newValue) {
 }
 
 function deleteTextNoteItem(textNoteID) {
-  showLoader(); // Show loader before starting the delete process
+  showLoader();
   chrome.runtime.sendMessage(
     { action: "deleteTextNote", textNoteID },
     (response) => {
@@ -132,7 +127,6 @@ function deleteTextNoteItem(textNoteID) {
       } else {
         console.error(`Failed to delete text note ID ${textNoteID}`);
       }
-      hideLoader(); // Hide loader after deletion process
     }
   );
 }
@@ -175,7 +169,7 @@ function selectAllEvent() {
 }
 
 function multiDeleteTextNote() {
-  showLoader(); // Show loader before starting the delete process
+  showLoader();
   const checkboxes = document.querySelectorAll(".select-row:checked");
   const deletePromises = Array.from(checkboxes).map(
     (checkbox) =>
@@ -196,7 +190,6 @@ function multiDeleteTextNote() {
 
   Promise.all(deletePromises).then(() => {
     loadTextNote();
-    hideLoader(); // Hide loader after all deletions are processed
   });
 }
 
@@ -227,7 +220,7 @@ function exportSelectedTextNotes() {
 }
 
 function importTextNotes(event) {
-  showLoader(); // Show loader before starting the load process
+  showLoader();
   const file = event.target.files[0];
   if (file) {
     const reader = new FileReader();
@@ -269,7 +262,6 @@ function importTextNotes(event) {
 
       loadTextNote();
       document.getElementById("totalRows").textContent = textNotes.length;
-      hideLoader(); // Hide loader after load is complete
     }
 
     async function processJSON(jsonContent) {
@@ -294,7 +286,6 @@ function importTextNotes(event) {
       console.log("Done");
       loadTextNote();
       document.getElementById("totalRows").textContent = textNotes.length;
-      hideLoader(); // Hide loader after load is complete
     }
 
     function getDefaultProfile() {
@@ -325,9 +316,22 @@ function getUrlParams(url) {
 }
 
 function showLoader() {
+  toggleTableInteraction(true);
+
   document.getElementById("multi-line-loader").style.display = "block";
 }
 
 function hideLoader() {
   document.getElementById("multi-line-loader").style.display = "none";
+  toggleTableInteraction(false);
+}
+
+function toggleTableInteraction(disable) {
+  const tableContainer = document.querySelector(".table-container");
+
+  if (disable) {
+    tableContainer.classList.add("disabled");
+  } else {
+    tableContainer.classList.remove("disabled");
+  }
 }
