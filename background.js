@@ -6,7 +6,7 @@ import {
   getAllProfiles,
   getDefaultProfile,
   setDefaultProfileByName,
-} from "./profileManager/js/profileManager.js";
+} from "./profileManager/background/profileManager.js";
 
 import {
   initDbTextNoteManager,

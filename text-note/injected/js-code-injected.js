@@ -1,20 +1,30 @@
-console.log('Injected JS G-bl7 Assistant start running.');
+console.log("Injected JS G-bl7 Assistant start running.");
 
 //  Get text From DB
 function main() {
-  chrome.runtime.sendMessage(
-    { action: 'getDefaultProfile' }, (reponse) => {
-      defaultProfile = reponse.data
-      chrome.runtime.sendMessage(
-        { action: 'getAllTextNote', profileID: defaultProfile.id }, (reponse) => {
-          reponse.data.forEach(item => {
-            let regex = new RegExp(`(${item.text})`, 'gi');
-            underlineText(document.body, regex, item.note)
-          });
-        }
-      );
-    }
-  );
+  chrome.runtime.sendMessage({ action: "getDefaultProfile" }, (reponse) => {
+    defaultProfile = reponse.data;
+    chrome.runtime.sendMessage(
+      { action: "getAllTextNote", profileID: defaultProfile.id },
+      (reponse) => {
+        reponse.data.forEach((item) => {
+          let regex = new RegExp(`(${item.text})`, "gi");
+          underlineText(document.body, regex, item.note);
+        });
+        document
+          .querySelector('link[rel="icon"]')
+          .setAttribute(
+            "href",
+            "data:image/svg+xml," +
+              encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><text x="0" y="12" fill="red">' +
+                  document.title +
+                  "</text></svg>"
+              )
+          );
+      }
+    );
+  });
 }
 
 // Function to underline text
@@ -25,12 +35,14 @@ function underlineText(node, regex, note) {
       const fragment = document.createDocumentFragment();
       let lastIndex = 0;
 
-      matches.forEach(match => {
+      matches.forEach((match) => {
         const matchIndex = node.textContent.indexOf(match, lastIndex);
-        fragment.appendChild(document.createTextNode(node.textContent.slice(lastIndex, matchIndex)));
+        fragment.appendChild(
+          document.createTextNode(node.textContent.slice(lastIndex, matchIndex))
+        );
 
-        const span = document.createElement('span');
-        span.className = 'saved-note';
+        const span = document.createElement("span");
+        span.className = "saved-note";
         span.title = note;
         span.textContent = match;
         fragment.appendChild(span);
@@ -38,13 +50,18 @@ function underlineText(node, regex, note) {
         lastIndex = matchIndex + match.length;
       });
 
-      fragment.appendChild(document.createTextNode(node.textContent.slice(lastIndex)));
+      fragment.appendChild(
+        document.createTextNode(node.textContent.slice(lastIndex))
+      );
       node.parentNode.replaceChild(fragment, node);
     }
-  } else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName !== 'SCRIPT' && node.nodeName !== 'STYLE') {
-    node.childNodes.forEach(child => underlineText(child, regex, note));
+  } else if (
+    node.nodeType === Node.ELEMENT_NODE &&
+    node.nodeName !== "SCRIPT" &&
+    node.nodeName !== "STYLE"
+  ) {
+    node.childNodes.forEach((child) => underlineText(child, regex, note));
   }
 }
 
-// Start 
 main();
