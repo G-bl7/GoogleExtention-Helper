@@ -1,35 +1,35 @@
 {
   "manifest_version": 3,
-  "name": "Vun Text Saver",
+  "name": "G-bl7 Assistent",
   "version": "1.1",
-  "description": "Save selected text with notes and underline saved text on any webpage.",
+  "description": "Collection Of multi tools for the help in dialy Task. G-bl7",
   "permissions": [
     "storage",
     "activeTab",
     "contextMenus",
     "scripting",
-    "tabs",
-    "contextMenus"
+    "tabs"
   ],
   "host_permissions": [
     "http://*/*",
     "https://*/*"
   ],
   "background": {
-    "service_worker": "background.js"
-  },
+    "service_worker": "background.js",
+    "type": "module"
+},
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "main-popup/popup.html",
     "default_icon": {
-      "16": "images/icon16.png",
-      "48": "images/icon48.png",
-      "128": "images/icon128.png"
+      "16": "main-popup/images/icon16.png",
+      "48": "main-popup/images/icon48.png",
+      "128": "main-popup/images/icon128.png"
     }
   },
   "icons": {
-    "16": "images/icon16.png",
-    "48": "images/icon48.png",
-    "128": "images/icon128.png"
+    "16": "main-popup/images/icon16.png",
+    "48": "main-popup/images/icon48.png",
+    "128": "main-popup/images/icon128.png"
   },
   "content_scripts": [
     {
@@ -37,11 +37,17 @@
         "<all_urls>"
       ],
       "js": [
-        "content.js"
+        "text-note/injected/js-code-injected.js"
       ],
       "css": [
-        "styles.css"
+        "text-note/injected/css-code-injected.css"
       ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["config.json"],
+      "matches": ["<all_urls>"]
     }
   ]
 }

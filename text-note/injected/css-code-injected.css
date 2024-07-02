@@ -1,4 +1,4 @@
-.vun-underline {
+.saved-note {
   text-decoration: underline;
   background-color: yellow;
   cursor: pointer;
@@ -6,7 +6,7 @@
 }
 
 /* Optional: Custom tooltip styling */
-.vun-underline:hover::after {
+.saved-notee:hover::after {
   content: attr(title);
   position: absolute;
   background-color: #333;

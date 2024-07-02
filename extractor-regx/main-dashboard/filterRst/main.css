@@ -1,0 +1,114 @@
+/* General styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    padding: 20px;
+    margin: 0;
+}
+
+/* Info Panels */
+.filter-info-left,
+.filter-info-right {
+    position: fixed;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    z-index: 1000;
+}
+
+.filter-info-left {
+    top: 10px;
+    left: 10px;
+}
+
+.filter-info-right {
+    top: 10px;
+    right: 10px;
+}
+
+/* Main Container */
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    margin-top: 60px; /* Adjust based on your info panels' height */
+}
+
+.topTitle {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Action Buttons */
+.container > div > button {
+    padding: 8px 16px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+}
+
+/* File Input */
+.container > div > input[type="file"] {
+    display: none; /* Hide file input initially */
+}
+
+/* Table Container */
+.table-container {
+    overflow-y: auto;
+    max-height: calc(100vh - 300px); /* Adjust based on your layout */
+    margin-top: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+/* Inputs */
+.filter-input {
+    width: calc(100% - 16px); /* Adjust for padding */
+    box-sizing: border-box;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .filter-info-left,
+    .filter-info-right {
+        position: static;
+        border: none;
+        padding: 10px 0;
+        text-align: center;
+    }
+
+    .container {
+        margin-top: 20px;
+    }
+
+    .container > div > button {
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+
+    .table-container {
+        max-height: calc(100vh - 380px);
+    }
+}

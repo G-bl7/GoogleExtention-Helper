@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filtered Text Results</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div class="filter-info-left">
+        <p>Profile Name: <span id="profileName">-</span></p>
+        <p>Total Texts: <span id="totalTexts">0</span></p>
+    </div>
+
+    <div class="filter-info-right">
+        <p>Filtered Results: <span id="filteredResultsCount">0</span></p>
+        <p>Selected Text: <span id="selectedTextCount">0</span></p>
+    </div>
+
+    <div class="container">
+        <h3 class="topTitle">Filtered Text Results</h3>
+
+        <div>
+            <input type="checkbox" id="UseDefaultProfile" title="Default Profile in use" checked hidden>
+            <button id="loadUnprofiliedRstText">Load Unprofilied</button>
+            <button id="exportFilteredRst">Export To file</button>
+            <input type="file" id="importFilteredRstFile" style="display: none;">
+            <button id="exportFilteredRst2Note">copy -> Note</button>
+            <button id="multideletebutton">Delete</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAllText"></th>
+                        <th>
+                            <label for="filterByText">Text</label><br>
+                            <input type="text" id="filterByText" class="filter-input" placeholder="Filter by text">
+                        </th>
+                        <th>Timestamp</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="filteredTextResults">
+                    <!-- Data rows will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
